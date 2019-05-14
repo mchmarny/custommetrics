@@ -1,10 +1,12 @@
 #!/bin/bash
 
-gcloud functions deploy stocker-process \
-  --entry-point ProcessorSentiment \
-  --set-env-vars "PID=${GCP_PROJECT}" \
+FVARS="PID=${GCP_PROJECT},METRIC_SRC_ID_PATH=source_id,METRIC_VALUE_PATH=cpu_used,METRIC_TIME_PATH=event_ts,METRIC_TYPE=custom.googleapis.com/metric/friction"
+
+gcloud functions deploy custommetrics-maker \
+  --entry-point ProcessorMetric \
+  --set-env-vars $FVARS \
   --memory 256MB \
   --region us-central1 \
   --runtime go112 \
-  --trigger-topic stocker-source \
-  --timeout=300s
+  --trigger-topic automodel-event \
+  --timeout 300s

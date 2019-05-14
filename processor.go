@@ -18,12 +18,13 @@ import (
 )
 
 var (
-	logger = log.New(os.Stdout, "[METRICS] ", 0)
+	logger = log.New(os.Stdout, "[CM] ", 0)
 
 	projectID       = mustEnvVar("PID", "")
 	metricType      = mustEnvVar("METRIC_TYPE", "custom.googleapis.com/metric/default")
-	metricSrcIDPath = mustEnvVar("METRIC_SRC_ID_PATH", "")
-	metricValuePath = mustEnvVar("METRIC_VALUE_PATH", "")
+	metricSrcIDPath = mustEnvVar("METRIC_SRC_ID_PATH", "")  // its value must be a string
+	metricValuePath = mustEnvVar("METRIC_VALUE_PATH", "")   // its value must be an int or a float
+	metricTimePath  = mustEnvVar("METRIC_TIME_PATH", "now") // Optional, if specified must be in RFC3339 format
 
 	once          sync.Once
 	monitorClient *monitoring.MetricClient
@@ -34,8 +35,8 @@ type PubSubMessage struct {
 	Data []byte `json:"data"`
 }
 
-// ProcessorSentiment processes pubsub topic events
-func ProcessorSentiment(ctx context.Context, m PubSubMessage) error {
+// ProcessorMetric processes pubsub topic events
+func ProcessorMetric(ctx context.Context, m PubSubMessage) error {
 
 	once.Do(func() {
 
@@ -52,18 +53,32 @@ func ProcessorSentiment(ctx context.Context, m PubSubMessage) error {
 
 	jq := gojsonq.New().JSONString(json)
 
-	metricSrcID := jq.Find(metricSrcIDPath)
-	logger.Printf("METRIC_SRC_ID: %v", metricSrcID)
+	metricSrcID := jq.Find(metricSrcIDPath).(string)
+	logger.Printf("METRIC_SRC_ID: %s", metricSrcID)
+
+	jq.Reset() // reset after each read
 
 	metricValue := jq.Find(metricValuePath)
 	logger.Printf("METRIC_VALUE: %v", metricValue)
 
-	//TODO: implement value conversion extract metrics and send them to publishMetric
-	return publishMetric(ctx, "123", 1.2345)
+	ts := time.Now()
+
+	if metricTimePath != "now" {
+		jq.Reset()
+		metricTime := jq.Find(metricTimePath).(string)
+		logger.Printf("METRIC_TIME: %v", metricTime)
+		mts, err := time.Parse(time.RFC3339, metricTime)
+		if err != nil {
+			return fmt.Errorf("Error parsing event time from %s: %v", metricTime, err)
+		}
+		ts = mts
+	}
+
+	return publishMetric(ctx, metricSrcID, ts, metricValue)
 
 }
 
-func publishMetric(ctx context.Context, sourceID string, metric interface{}) error {
+func publishMetric(ctx context.Context, sourceID string, ts time.Time, metric interface{}) error {
 
 	// derive typed vlaue from passed interface
 	var val *monitoringpb.TypedValue
@@ -81,11 +96,10 @@ func publishMetric(ctx context.Context, sourceID string, metric interface{}) err
 	}
 
 	// create data point
+	ptTs := &googlepb.Timestamp{Seconds: ts.Unix()}
 	dataPoint := &monitoringpb.Point{
-		Interval: &monitoringpb.TimeInterval{
-			EndTime: &googlepb.Timestamp{Seconds: time.Now().Unix()},
-		},
-		Value: val,
+		Interval: &monitoringpb.TimeInterval{StartTime: ptTs, EndTime: ptTs},
+		Value:    val,
 	}
 
 	// create time series request with the data point
@@ -114,6 +128,7 @@ func publishMetric(ctx context.Context, sourceID string, metric interface{}) err
 func mustEnvVar(key, fallbackValue string) string {
 
 	if val, ok := os.LookupEnv(key); ok {
+		logger.Printf("%s: %s", key, val)
 		return val
 	}
 
@@ -121,5 +136,6 @@ func mustEnvVar(key, fallbackValue string) string {
 		logger.Fatalf("Required envvar not set: %s", key)
 	}
 
+	logger.Printf("%s: %s (not set, using default)", key, fallbackValue)
 	return fallbackValue
 }

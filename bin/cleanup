@@ -1,5 +1,3 @@
 #!/bin/bash
 
-gcloud functions delete stocker-process --region us-central1
-
-gcloud dataflow jobs cancel stocker-processed-to-bq-pump --region "us-central1"
+gcloud functions delete custommetrics-maker --region us-central1
