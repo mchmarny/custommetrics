@@ -1,4 +1,4 @@
-module github.com/mchmarny/custom-stackdriver-metrics-from-pubsub-payload
+module github.com/mchmarny/custommetrics
 
 go 1.12
 
