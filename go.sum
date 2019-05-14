@@ -63,5 +63,7 @@ google.golang.org/genproto v0.0.0-20190513181449-d00d292a067c h1:m9avZ3wyOWBR0fL
 google.golang.org/genproto v0.0.0-20190513181449-d00d292a067c/go.mod h1:z3L6/3dTEVtUr6QSP8miRzeRqwQOioJ9I66odjN4I7s=
 google.golang.org/grpc v1.19.0 h1:cfg4PD8YEdSFnm7qLV4++93WcmhH2nIUhMjhdCvl3j8=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
+gopkg.in/thedevsaddam/gojsonq.v2 v2.2.1 h1:U8j1mHsAnVkVlzZYQksm4Fh9fmHANmVJiBHBXVOqbSs=
+gopkg.in/thedevsaddam/gojsonq.v2 v2.2.1/go.mod h1:HBelnCeVANZNhSEb9VArE6CFYrmP2CSIBKP4ftgsl/M=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190106161140-3f1c8253044a/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
