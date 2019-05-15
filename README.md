@@ -11,7 +11,6 @@ If you have done any distributed development on GCP you've probably used PubSub 
     "label":"friction",
     "value":0.2789,
   },
-  ...
 }
 ```
 
@@ -77,7 +76,7 @@ versionId: '3'
 
 In Stackdriver now you can use Metric Explorer to build a time-series chart of the published data. First, use the  resource type and metric finder to paste your metric type. Using the above deployment as an example that would be `custom.googleapis.com/metric/friction`.
 
-![Metric](./img/metric.png "Stackdriver Metric")
+![Metric](./img/metric.png =200x)
 
 Now you can use the `Group By` to display the time series per `source_id` and optionally specify the Aggregator in case you want to display `mean` for more volatile metrics.
 
