@@ -73,3 +73,11 @@ status: ACTIVE
 versionId: '3'
 ```
 
+## Monitoring
+
+In Stackdriver now you can use Metric Explorer to build a time-series chart of the published data. First, use the  resource type and metric finder to paste your metric type. Using the above deployment as an example that would be `custom.googleapis.com/metric/friction`.
+
+![Metric](./img/metric.png "Stackdriver Metric")
+
+Now you can use the `Group By` to display the time series per `source_id` and optionally specify the Aggregator in case you want to display `mean` for more volatile metrics.
+
