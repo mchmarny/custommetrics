@@ -80,6 +80,9 @@ Now you can use the `Group By` to display the time series per `source_id` and op
 
 > More details on Stackdriver metrics selection [here](https://cloud.google.com/monitoring/charts/metrics-selector)
 
+> Also, make sure to consider the [Stackdriver Monitoring limits on custom metrics](https://cloud.google.com/monitoring/quotas) before implementing this.
+
+
 ## Alerts
 
 Once you have custom metric monitored in stack driver you can easily create an alert policy. Many options there with regards to the duration, single or multiple sources, and percentages vs single values.
