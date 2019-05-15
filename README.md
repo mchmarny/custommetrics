@@ -80,7 +80,7 @@ Now you can use the `Group By` to display the time series per `source_id` and op
 
 > More details on Stackdriver metrics selection [here](https://cloud.google.com/monitoring/charts/metrics-selector)
 
-> Also, make sure to consider the [Stackdriver Monitoring limits on custom metrics](https://cloud.google.com/monitoring/quotas) before implementing this.
+> Also, make sure to consider the [Stackdriver Monitoring limits on custom metrics](https://cloud.google.com/monitoring/quotas) before implementing this. Specifically, the fact that the rate at which data can be written to a single time series is 1 point per min.
 
 ## Alerts
 
