@@ -1,6 +1,10 @@
 # custommetrics
 
-If you have done any distributed development on GCP you've probably used PubSub to connect two or more data/event processing components (e.g. IoT Gateway to BigQuery or GCE-based batch process to Dataflow processing etc.). When I build these kind of integrations I often find myself wishing I could "pick" at one of the metrics in the data flowing through the system... either for debugging purposes or to just understand the state of the pipeline.
+This demo illustrates how to use a generic Cloud Function to trigger on already existing PubSub topic, extract data from its payload, and publish it to Google Stackdriver as a custom metric without altering your original data pipeline.
+
+## Context
+
+If you have done any distributed development on GCP you've probably used PubSub to connect two or more data/event processing components (e.g. IoT Gateway to BigQuery or GCE-based batch process to Dataflow processing etc.). When I build these kind of integrations I often find myself wishing I could "take a pick" at one of the metrics in the data flowing through the system.
 
 ```json
 {
@@ -14,16 +18,11 @@ If you have done any distributed development on GCP you've probably used PubSub 
 }
 ```
 
-Assuming for example that you data published to PubSub topic has these attributes, and you may want to for example display or monitor the deviation of `friction` per each `device` over time.
+Assuming for example that your data published to PubSub topic has the above shape, in this demo I will illustrate how how you can easily monitor the deviation of `friction` per each `device` over time without the need to manage additional infrastructure.
 
 ![Chart](./img/sd.png "Stackdriver Chart")
 
-
-I have done this often enough that I decided to write something I can reuse. Ideally, something that would not require me to manage any infrastructure, be cost effective, and be easy to standup and turn-down as needed.
-
-This demo illustrates how you can use a generic Cloud Function to trigger on already existing PubSub topic to extract metric value and publish it to Google Stackdriver as a custom metric. This is done without altering your original data pipeline.
-
-Additionally, we are going to create monitoring policy to alert us when the monitored metric falls outside of the pre-configured range.
+Additionally, I will show you how you can create monitoring policy to alert you when the monitored metric falls outside of the pre-configured range.
 
 > Note, this will only work on PubSub payloads that a re published in JSON format.
 
@@ -79,6 +78,18 @@ In Stackdriver now you can use Metric Explorer to build a time-series chart of t
 ![Metric](./img/metric.png "Stackdriver Metric")
 
 Now you can use the `Group By` to display the time series per `source_id` and optionally specify the Aggregator in case you want to display `mean` for more volatile metrics.
+
+## Alerts
+
+Once you have custom metric monitored in stack driver you can easily create an alert policy. Many options there with regards to the duration, single or multiple sources, and percentages vs single values.
+
+![Alert](./img/alert.png "Stackdriver Alert Policy")
+
+Once configured though, when the monitored metrics violates that policy you can get notifications about an incident
+
+![Alert](./img/incident.png "Stackdriver Incident")
+
+Obviously this approach is meant to replace a proper monitoring solution. Still, I hope you found it helpful.
 
 ## Disclaimer
 
