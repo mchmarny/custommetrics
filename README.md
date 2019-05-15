@@ -78,6 +78,8 @@ In Stackdriver now you can use Metric Explorer to build a time-series chart of t
 
 Now you can use the `Group By` to display the time series per `source_id` and optionally specify the Aggregator in case you want to display `mean` for more volatile metrics.
 
+> More details on Stackdriver metrics selection [here](https://cloud.google.com/monitoring/charts/metrics-selector)
+
 ## Alerts
 
 Once you have custom metric monitored in stack driver you can easily create an alert policy. Many options there with regards to the duration, single or multiple sources, and percentages vs single values.
