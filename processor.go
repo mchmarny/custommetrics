@@ -38,6 +38,7 @@ type PubSubMessage struct {
 // ProcessorMetric processes pubsub topic events
 func ProcessorMetric(ctx context.Context, m PubSubMessage) error {
 
+	// setup
 	once.Do(func() {
 
 		// create metric client

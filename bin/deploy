@@ -1,6 +1,12 @@
 #!/bin/bash
 
-FVARS="PID=${GCP_PROJECT},METRIC_SRC_ID_PATH=source_id,METRIC_VALUE_PATH=cpu_used,METRIC_TIME_PATH=event_ts,METRIC_TYPE=custom.googleapis.com/metric/friction"
+FTOPIC="automodel-event"
+
+FVAR="PID=${GCP_PROJECT}"
+FVAR="${FVAR},METRIC_SRC_ID_PATH=source_id"
+FVAR="${FVAR},METRIC_VALUE_PATH=cpu_used"
+FVAR="${FVAR},METRIC_TIME_PATH=event_ts"
+FVAR="${FVAR},METRIC_TYPE=custom.googleapis.com/metric/friction"
 
 gcloud functions deploy custommetrics-maker \
   --entry-point ProcessorMetric \
@@ -8,5 +14,5 @@ gcloud functions deploy custommetrics-maker \
   --memory 256MB \
   --region us-central1 \
   --runtime go112 \
-  --trigger-topic automodel-event \
-  --timeout 300s
+  --trigger-topic $FTOPIC \
+  --timeout 540s

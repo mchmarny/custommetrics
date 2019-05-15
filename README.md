@@ -1,70 +1,75 @@
-# stockercm
+# custommetrics
 
-Sentiment processor using `Cloud Functions`, `Cloud PubSub`, `Natural Language Processing API`, and `Cloud Dataflow`.
+If you have done any distributed development on GCP you've probably used PubSub to connect two or more data/event processing components (e.g. IoT Gateway to BigQuery or GCE-based batch process to Dataflow processing etc.). When I build these kind of integrations I often find myself wishing I could "pick" at one of the metrics in the data flowing through the system... either for debugging purposes or to just understand the state of the pipeline.
 
-## Setup
-
-Create PubSub topics
-
-```shell
-gcloud pubsub topics create stocker-source
-gcloud pubsub topics create stocker-processed
+```json
+{
+  "source_id":"device-1",
+  "event_id":"63404713-76c8-412b-a8fc-49f35409a977",
+  "event_ts":"2019-05-14T05:48:13.132652Z",
+  "metric": {
+    "label":"friction",
+    "value":0.2789,
+  },
+  ...
+}
 ```
 
-Creating BigQuery content table
+Assuming for example that you data published to PubSub topic has these attributes, and you may want to for example display or monitor the deviation of `friction` per each `device` over time.
+
+![Chart](./img/sd.png "Stackdriver Chart")
+
+
+I have done this often enough that I decided to write something I can reuse. Ideally, something that would not require me to manage any infrastructure, be cost effective, and be easy to standup and turn-down as needed.
+
+This demo illustrates how you can use a generic Cloud Function to trigger on already existing PubSub topic to extract metric value and publish it to Google Stackdriver as a custom metric. This is done without altering your original data pipeline.
+
+Additionally, we are going to create monitoring policy to alert us when the monitored metric falls outside of the pre-configured range.
+
+> Note, this will only work on PubSub payloads that a re published in JSON format.
+
+## Configuration
+
+Assuming the above JSON payload shape on your PubSub topic, there are few variables we need to define first:
 
 ```shell
-bq mk stocker
-bq query --use_legacy_sql=false "
-  CREATE OR REPLACE TABLE stocker.content (
-    symbol STRING NOT NULL,
-    cid STRING NOT NULL,
-    created TIMESTAMP NOT NULL,
-    author STRING NOT NULL,
-    lang STRING NOT NULL,
-    source STRING NOT NULL,
-    content STRING NOT NULL,
-    magnitude FLOAT64 NOT NULL,
-    score FLOAT64 NOT NULL,
-    retweet BOOL NOT NULL
-)"
+FTOPIC="name-of-data-topic"
+
+FVAR="PID=${GCP_PROJECT}"
+FVAR="${FVAR},METRIC_SRC_ID_PATH=source_id"
+FVAR="${FVAR},METRIC_TIME_PATH=event_ts"
+FVAR="${FVAR},METRIC_VALUE_PATH=metric.value"
+FVAR="${FVAR},METRIC_TYPE=custom.googleapis.com/metric/friction"
 ```
 
-Create Cloud Dataflow job to drain processed topic to BigQuery
+* `FTOPIC` is the name of the PubSub topic on which you want to trigger
+* `FVAR` defines the "selects" for data to extract from each one fo the PubSub topic payloads
+  * `METRIC_SRC_ID_PATH` uniquely identity of the source of this event
+  * `METRIC_TIME_PATH` (optional) time stamp of this event (must be RFC3339 format, processing time if not defined)
+  * `METRIC_TYPE` the type of this metric that will distinguish it from other metrics you track in Stackdriver
+
+## Deployment
+
+Once you have these metrics defined, you can deploy the Cloud Function
 
 ```shell
-gcloud dataflow jobs run stocker-processed-to-bq-pump \
-  --gcs-location gs://dataflow-templates/latest/PubSub_to_BigQuery \
-  --parameters topic=projects/${GCP_PROJECT}/topics/stocker-processed,\
-    table=${GCP_PROJECT}:stocker.content \
-  --region us-central1
-```
-
-## Deploy
-
-Deploy a Cloud Function to process the events from `stocker-source` topic and push results to `stocker-processed`.
-
-```shell
-gcloud functions deploy stocker-process \
-  --entry-point ProcessorSentiment \
-  --set-env-vars "PID=${GCP_PROJECT}" \
+gcloud functions deploy custommetrics-maker \
+  --entry-point ProcessorMetric \
+  --set-env-vars $FVARS \
   --memory 256MB \
   --region us-central1 \
   --runtime go112 \
-  --trigger-topic stocker-source \
-  --timeout=300s
+  --trigger-topic $FTOPIC \
+  --timeout 540s
 ```
 
-## Cleanup
-
-Delete the Cloud Function
+If everything goes well you will see a confirmation
 
 ```shell
-gcloud functions delete stocker-process --region us-central1
+$: bin/deploy
+Deploying function (may take a while - up to 2 minutes)...done.
+...
+status: ACTIVE
+versionId: '3'
 ```
 
-Delete the Cloud Dataflow job
-
-```shell
-gcloud dataflow jobs cancel stocker-processed-to-bq-pump --region us-central1
-```

@@ -1,5 +1,11 @@
 .git
 .gitignore
 
-node_modules
+/bin
+/img
 #!include:.gitignore
+
+README.md
+LICENSE
+
+processor_test.go
