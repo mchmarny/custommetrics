@@ -81,3 +81,6 @@ In Stackdriver now you can use Metric Explorer to build a time-series chart of t
 
 Now you can use the `Group By` to display the time series per `source_id` and optionally specify the Aggregator in case you want to display `mean` for more volatile metrics.
 
+## Disclaimer
+
+This is my personal project and it does not represent my employer. I take no responsibility for issues caused by this code. I do my best to ensure that everything works, but if something goes wrong, my apologies is all you will get.
