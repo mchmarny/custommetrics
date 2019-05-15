@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 	"time"
 
+	meta "cloud.google.com/go/compute/metadata"
 	monitoring "cloud.google.com/go/monitoring/apiv3"
 	googlepb "github.com/golang/protobuf/ptypes/timestamp"
 	metricpb "google.golang.org/genproto/googleapis/api/metric"
@@ -20,12 +22,12 @@ import (
 var (
 	logger = log.New(os.Stdout, "[CM] ", 0)
 
-	projectID       = mustEnvVar("PID", "")
 	metricType      = mustEnvVar("METRIC_TYPE", "custom.googleapis.com/metric/default")
 	metricSrcIDPath = mustEnvVar("METRIC_SRC_ID_PATH", "")  // its value must be a string
 	metricValuePath = mustEnvVar("METRIC_VALUE_PATH", "")   // its value must be an int or a float
 	metricTimePath  = mustEnvVar("METRIC_TIME_PATH", "now") // Optional, if specified must be in RFC3339 format
 
+	projectID     string
 	once          sync.Once
 	monitorClient *monitoring.MetricClient
 )
@@ -41,12 +43,26 @@ func ProcessorMetric(ctx context.Context, m PubSubMessage) error {
 	// setup
 	once.Do(func() {
 
+		// create metadata client
+		projectID = os.Getenv("GCP_PROJECT")
+		if projectID == "" {
+			mc := meta.NewClient(&http.Client{Transport: userAgentTransport{
+				userAgent: "my-user-agent",
+				base:      http.DefaultTransport,
+			}})
+			p, err := mc.ProjectID()
+			if err != nil {
+				logger.Fatalf("Error creating metadata client: %v", err)
+			}
+			projectID = p
+		}
+
 		// create metric client
-		mc, err := monitoring.NewMetricClient(ctx)
+		mo, err := monitoring.NewMetricClient(ctx)
 		if err != nil {
 			logger.Fatalf("Error creating monitor client: %v", err)
 		}
-		monitorClient = mc
+		monitorClient = mo
 	})
 
 	json := string(m.Data)
@@ -139,4 +155,16 @@ func mustEnvVar(key, fallbackValue string) string {
 
 	logger.Printf("%s: %s (not set, using default)", key, fallbackValue)
 	return fallbackValue
+}
+
+// GCP Metadata
+// https://godoc.org/cloud.google.com/go/compute/metadata#example-NewClient
+type userAgentTransport struct {
+	userAgent string
+	base      http.RoundTripper
+}
+
+func (t userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", t.userAgent)
+	return t.base.RoundTrip(req)
 }

@@ -33,11 +33,10 @@ Assuming the above JSON payload shape on your PubSub topic, there are few variab
 ```shell
 FTOPIC="name-of-data-topic"
 
-FVAR="PID=${GCP_PROJECT}"
+FVAR="METRIC_TYPE=custom.googleapis.com/metric/friction"
 FVAR="${FVAR},METRIC_SRC_ID_PATH=source_id"
+FVAR="${FVAR},METRIC_VALUE_PATH=cpu_used"
 FVAR="${FVAR},METRIC_TIME_PATH=event_ts"
-FVAR="${FVAR},METRIC_VALUE_PATH=metric.value"
-FVAR="${FVAR},METRIC_TYPE=custom.googleapis.com/metric/friction"
 ```
 
 * `FTOPIC` is the name of the PubSub topic on which you want to trigger
@@ -53,7 +52,7 @@ Once you have these metrics defined, you can deploy the Cloud Function
 ```shell
 gcloud functions deploy custommetrics-maker \
   --entry-point ProcessorMetric \
-  --set-env-vars $FVARS \
+  --set-env-vars=$FVARS \
   --memory 256MB \
   --region us-central1 \
   --runtime go112 \
