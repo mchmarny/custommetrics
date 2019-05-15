@@ -18,13 +18,13 @@ If you have done any distributed development on GCP you've probably used PubSub 
 }
 ```
 
-Assuming for example that your data published to PubSub topic has the above shape, in this demo I will illustrate how how you can easily monitor the deviation of `friction` per each `device` over time without the need to manage additional infrastructure.
+Assuming for example that your data published to PubSub topic has the above shape, in this demo I will illustrate how you can easily monitor the deviation of `friction` per each `device` over time without the need to manage additional infrastructure.
 
 ![Chart](./img/sd.png "Stackdriver Chart")
 
 Additionally, I will show you how you can create monitoring policy to alert you when the monitored metric falls outside of the pre-configured range.
 
-> Note, this will only work on PubSub payloads that a re published in JSON format.
+> Note, this will only work on JSON PubSub payloads
 
 ## Configuration
 
