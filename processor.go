@@ -23,9 +23,9 @@ var (
 	logger = log.New(os.Stdout, "[CM] ", 0)
 
 	metricType      = mustEnvVar("METRIC_TYPE", "custom.googleapis.com/metric/default")
-	metricSrcIDPath = mustEnvVar("METRIC_SRC_ID_PATH", "")  // its value must be a string
-	metricValuePath = mustEnvVar("METRIC_VALUE_PATH", "")   // its value must be an int or a float
-	metricTimePath  = mustEnvVar("METRIC_TIME_PATH", "now") // Optional, if specified must be in RFC3339 format
+	metricSrcIDPath = mustEnvVar("METRIC_SRC_ID", "")  // its value must be a string
+	metricValuePath = mustEnvVar("METRIC_VALUE", "")   // its value must be an int or a float
+	metricTimePath  = mustEnvVar("METRIC_TIME", "now") // Optional, if specified must be in RFC3339 format
 
 	projectID     string
 	once          sync.Once
@@ -44,10 +44,10 @@ func ProcessorMetric(ctx context.Context, m PubSubMessage) error {
 	once.Do(func() {
 
 		// create metadata client
-		projectID = os.Getenv("GCP_PROJECT")
+		projectID = os.Getenv("GCP_PROJECT") // for local execution
 		if projectID == "" {
 			mc := meta.NewClient(&http.Client{Transport: userAgentTransport{
-				userAgent: "my-user-agent",
+				userAgent: "custommetrics",
 				base:      http.DefaultTransport,
 			}})
 			p, err := mc.ProjectID()
@@ -73,13 +73,11 @@ func ProcessorMetric(ctx context.Context, m PubSubMessage) error {
 	metricSrcID := jq.Find(metricSrcIDPath).(string)
 	logger.Printf("METRIC_SRC_ID: %s", metricSrcID)
 
-	jq.Reset() // reset after each read
-
+	jq.Reset() // reset before each read
 	metricValue := jq.Find(metricValuePath)
 	logger.Printf("METRIC_VALUE: %v", metricValue)
 
 	ts := time.Now()
-
 	if metricTimePath != "now" {
 		jq.Reset()
 		metricTime := jq.Find(metricTimePath).(string)
@@ -97,11 +95,11 @@ func ProcessorMetric(ctx context.Context, m PubSubMessage) error {
 
 func publishMetric(ctx context.Context, sourceID string, ts time.Time, metric interface{}) error {
 
-	// derive typed vlaue from passed interface
+	// derive typed value from passed interface
 	var val *monitoringpb.TypedValue
 	switch v := metric.(type) {
 	default:
-		return fmt.Errorf("Unsuported metric type: %T", v)
+		return fmt.Errorf("Unsupported metric type: %T", v)
 	case float64:
 		val = &monitoringpb.TypedValue{
 			Value: &monitoringpb.TypedValue_DoubleValue{DoubleValue: metric.(float64)},
