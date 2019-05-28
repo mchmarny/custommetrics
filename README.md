@@ -31,12 +31,12 @@ Additionally, I will show you how you can create monitoring policy to alert you 
 Assuming the above JSON payload shape on your PubSub topic, there are few variables we need to define first:
 
 ```shell
-FTOPIC="name-of-data-topic"
+FTOPIC="automodel-event"
 
 FVAR="METRIC_TYPE=custom.googleapis.com/metric/friction"
-FVAR="${FVAR},METRIC_SRC_ID_PATH=source_id"
-FVAR="${FVAR},METRIC_VALUE_PATH=cpu_used"
-FVAR="${FVAR},METRIC_TIME_PATH=event_ts"
+FVAR+=",METRIC_SRC_ID=source_id"
+FVAR+=",METRIC_VALUE=cpu_used"
+FVAR+=",METRIC_TIME=event_ts"
 ```
 
 * `FTOPIC` is the name of the PubSub topic on which you want to trigger
