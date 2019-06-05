@@ -1,17 +1,17 @@
 #!/bin/bash
 
-FTOPIC="automodel-event"
+TOPIC="iotevents"
 
-FVAR="METRIC_TYPE=custom.googleapis.com/metric/friction"
-FVAR+=",METRIC_SRC_ID=source_id"
-FVAR+=",METRIC_VALUE=cpu_used"
-FVAR+=",METRIC_TIME=event_ts"
+FVARS="METRIC_TYPE=custom.googleapis.com/metric/friction"
+FVARS+=",SRC_ID_PATH=source_id"
+FVARS+=",VALUE_PATH=cpu_used"
+FVARS+=",TIME_PATH=event_ts"
 
-gcloud functions deploy custommetrics-maker \
-  --entry-point ProcessorMetric \
+gcloud functions deploy custommetrics \
+  --entry-point EventProcessor \
   --set-env-vars=$FVARS \
   --memory 256MB \
   --region us-central1 \
-  --runtime go112 \
-  --trigger-topic $FTOPIC \
+  --runtime go111 \
+  --trigger-topic $TOPIC \
   --timeout 540s
