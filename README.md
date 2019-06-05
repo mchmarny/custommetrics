@@ -55,7 +55,7 @@ Once you have these variables defined, you can deploy the Cloud Function
 
 ```shell
 gcloud functions deploy custommetrics \
-  --entry-point ProcessorMetric \
+  --entry-point EventProcessor \
   --set-env-vars=$FVARS \
   --memory 256MB \
   --region us-central1 \

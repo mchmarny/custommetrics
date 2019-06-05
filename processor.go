@@ -49,8 +49,8 @@ type PubSubMessage struct {
 	Data []byte `json:"data"`
 }
 
-// ProcessorMetric processes pubsub topic events
-func ProcessorMetric(ctx context.Context, m PubSubMessage) error {
+// EventProcessor processes pubsub topic events
+func EventProcessor(ctx context.Context, m PubSubMessage) error {
 
 	// setup
 	once.Do(func() {

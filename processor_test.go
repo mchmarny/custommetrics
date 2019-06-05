@@ -30,7 +30,7 @@ func TestProcessorSentiment(t *testing.T) {
 
 	msg := PubSubMessage{Data: []byte(json)}
 
-	err := ProcessorMetric(ctx, msg)
+	err := EventProcessor(ctx, msg)
 	if err != nil {
 		t.Errorf("Failed to publish metric: %v", err)
 	}
