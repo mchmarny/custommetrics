@@ -31,16 +31,16 @@ Additionally, I will show you how you can create monitoring policy to alert you 
 Assuming the above JSON payload shape on your PubSub topic, there are few variables we need to define first is the name of the PubSub topic on which you want to trigger
 
 ```shell
-TOPIC="automodel-event"
+TOPIC="iotevents"
 ```
 
 We also need to define the Stackdriver metric type (`custom.googleapis.com/metric/*`) where the last part is the type of metric we will be tracking (e.g. `custom.googleapis.com/metric/friction` for friction) and the payload selector paths for `SRC_ID_PATH`, `VALUE_PATH`, `TIME_PATH`.
 
 ```shell
-FVAR="METRIC_TYPE=custom.googleapis.com/metric/friction"
-FVAR+=",SRC_ID_PATH=source_id"
-FVAR+=",VALUE_PATH=cpu_used"
-FVAR+=",TIME_PATH=event_ts"
+FVARS="METRIC_TYPE=custom.googleapis.com/metric/friction"
+FVARS+=",SRC_ID_PATH=source_id"
+FVARS+=",VALUE_PATH=cpu_used"
+FVARS+=",TIME_PATH=event_ts"
 ```
 
 Few things to keep in mind:
@@ -59,7 +59,7 @@ gcloud functions deploy custommetrics \
   --set-env-vars=$FVARS \
   --memory 256MB \
   --region us-central1 \
-  --runtime go112 \
+  --runtime go111 \
   --trigger-topic $TOPIC \
   --timeout 540s
 ```
