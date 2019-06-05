@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"sync"
@@ -19,13 +20,24 @@ import (
 	"gopkg.in/thedevsaddam/gojsonq.v2"
 )
 
+const (
+	metricTypeToken         = "METRIC_TYPE"
+	metricSrcIDPathToken    = "SRC_ID_PATH"
+	metricValuePathToken    = "VALUE_PATH"
+	metricTsPathToken       = "TIME_PATH"
+	metricTsPathTokenNotSet = "now"
+)
+
 var (
 	logger = log.New(os.Stdout, "[CM] ", 0)
 
-	metricType      = mustEnvVar("METRIC_TYPE", "custom.googleapis.com/metric/default")
-	metricSrcIDPath = mustEnvVar("METRIC_SRC_ID", "")  // its value must be a string
-	metricValuePath = mustEnvVar("METRIC_VALUE", "")   // its value must be an int or a float
-	metricTimePath  = mustEnvVar("METRIC_TIME", "now") // Optional, if specified must be in RFC3339 format
+	metricType = mustEnvVar(metricTypeToken, "custom.googleapis.com/metric/default")
+	// its value must be a string
+	metricSrcIDPath = mustEnvVar(metricSrcIDPathToken, "")
+	// its value must be an int or a float
+	metricValuePath = mustEnvVar(metricValuePathToken, "")
+	// Optional, if specified must be in RFC3339 format
+	metricTimePath = mustEnvVar(metricTsPathToken, metricTsPathTokenNotSet)
 
 	projectID     string
 	once          sync.Once
@@ -71,17 +83,17 @@ func ProcessorMetric(ctx context.Context, m PubSubMessage) error {
 	jq := gojsonq.New().JSONString(json)
 
 	metricSrcID := jq.Find(metricSrcIDPath).(string)
-	logger.Printf("METRIC_SRC_ID: %s", metricSrcID)
+	logger.Printf("%s: %s", metricSrcIDPathToken, metricSrcID)
 
 	jq.Reset() // reset before each read
 	metricValue := jq.Find(metricValuePath)
-	logger.Printf("METRIC_VALUE: %v", metricValue)
+	logger.Printf("%s: %v", metricValuePathToken, metricValue)
 
 	ts := time.Now()
-	if metricTimePath != "now" {
+	if metricTimePath != metricTsPathTokenNotSet {
 		jq.Reset()
 		metricTime := jq.Find(metricTimePath).(string)
-		logger.Printf("METRIC_TIME: %v", metricTime)
+		logger.Printf("%s: %v", metricTsPathToken, metricTime)
 		mts, err := time.Parse(time.RFC3339, metricTime)
 		if err != nil {
 			return fmt.Errorf("Error parsing event time from %s: %v", metricTime, err)
@@ -123,8 +135,13 @@ func publishMetric(ctx context.Context, sourceID string, ts time.Time, metric in
 		TimeSeries: []*monitoringpb.TimeSeries{
 			{
 				Metric: &metricpb.Metric{
-					Type:   metricType,
-					Labels: map[string]string{"source_id": sourceID},
+					Type: metricType,
+					Labels: map[string]string{
+						"source_id": sourceID,
+						// random label to work around SD complaining
+						// about multiple events for same time window
+						"rnd_label": fmt.Sprint(rand.Intn(100)),
+					},
 				},
 				Resource: &monitoredrespb.MonitoredResource{
 					Type:   "global",

@@ -12,7 +12,7 @@ func TestProcessorSentiment(t *testing.T) {
 	ctx := context.Background()
 
 	json := `{
-		"source_id":"comp-client",
+		"source_id":"test-client",
 		"event_id":"eid-4d29eab6-a11d-4313-a514-19750f339c3c",
 		"event_ts":"%s",
 		"label":"comp-stats",
